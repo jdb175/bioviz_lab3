@@ -1,13 +1,18 @@
+//Canvas settings
 var rows = 50;
 var columns = 50;
-var curData = [];
 var width = 600;
 var height = 600;
 var canvas;
+
+//State info
 var changes = 0;
 var stopSim = false;
 var simulating = false;
 var generation = 0;
+var curGeneration = [];
+
+//Backtracking
 var prevGenerations = []
 var maxGenerationsStored = 100;
 
@@ -19,8 +24,7 @@ window.onload = function () {
 	//Set initial state
 	SetInitialState();
 
-	canvas = d3.select("body")
-		.append("svg")
+	canvas = d3.select("svg")
 		.attr("width", width)
 		.attr("height", height);
 
@@ -43,9 +47,10 @@ window.onload = function () {
 	    	}
 	    } else if(evt.keyCode == 39 && !simulating) {
 	    	simulate();
-	    } else if(evt.keyCode == 37 && !simulating && generation > 1) {
-	    	curData = prevGenerations.pop();
+	    } else if(evt.keyCode == 37 && !simulating && prevGenerations.length > 0) {
+	    	curGeneration = prevGenerations.pop();
 	    	generation--;
+    		document.getElementById("Generation").innerHTML = generation;
 	    	showGrid();
 	    }
   	});
@@ -55,7 +60,7 @@ window.onload = function () {
 
 function placeAt(obj, row, column) {
 	var index = (row*rows) + column;
-	curData[index] = obj;
+	curGeneration[index] = obj;
 	showGrid();
 }
 
@@ -74,26 +79,28 @@ function beginSimulation() {
 function simulate() {
 	changes = 0;
 	var nextData = [];
-	generation++;
-
-	for(var i = 0; i < curData.length; ++i){
-		nextData[i] = curData[i].simulate();
-	}
 
 	//save this generation
-	if(generation > maxGenerationsStored) {
+	if(prevGenerations.length > maxGenerationsStored) {
 		prevGenerations = prevGenerations.slice(1);
 	}
-	prevGenerations.push(curData);
-	//now replace it
-	curData = nextData;
+	prevGenerations.push(curGeneration);
+
+
+	//now simulate next
+	generation++;
+	document.getElementById("Generation").innerHTML = generation;
+	for(var i = 0; i < curGeneration.length; ++i){
+		nextData[i] = curGeneration[i].simulate();
+	}
+	curGeneration = nextData;
 	showGrid();
 }
 
 //Shows the grid
 function showGrid(){
 	var data = canvas.selectAll("circle")
-		.data(curData);
+		.data(curGeneration);
 
 	data.enter()
 			.append("circle")
@@ -130,7 +137,7 @@ function countAdjacent(type,row, column) {
 
 			//Increment in dictionary
 			var index = (i*rows) + j;
-			if(curData[index] instanceof type) {
+			if(curGeneration[index] instanceof type) {
 				++ret;
 			}
 		}

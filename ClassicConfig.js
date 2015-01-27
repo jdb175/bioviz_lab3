@@ -1,7 +1,7 @@
 function SetInitialState() {
 	for(var i = 0; i < rows; ++i){
 		for(var j = 0; j < columns; ++j){
-			curData.push(new Dead(i,j));
+			curGeneration.push(new Dead(i,j));
 		}
 	}
 }
@@ -9,7 +9,7 @@ function SetInitialState() {
 function Dead(row, column) {
 	this.row = row;
 	this.column = column;
-	this.color = "lightgray";
+	this.color = "#eeeeee";
 
 	this.simulate = function() {
 		//We become live iff have 3 alive neighbors
@@ -30,7 +30,7 @@ function Dead(row, column) {
 function Alive(row, column) {
 	this.row = row;
 	this.column = column;
-	this.color = "blue";
+	this.color = "lightblue";
 
 	this.simulate = function() {
 		//Count live neighbors

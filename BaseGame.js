@@ -7,7 +7,9 @@ var canvas;
 var changes = 0;
 var stopSim = false;
 var simulating = false;
-var generations = 0;
+var generation = 0;
+var prevGenerations = []
+var maxGenerationsStored = 100;
 
 //handle mouse info
 var mouseDown = 0;
@@ -41,6 +43,10 @@ window.onload = function () {
 	    	}
 	    } else if(evt.keyCode == 39 && !simulating) {
 	    	simulate();
+	    } else if(evt.keyCode == 37 && !simulating && generation > 1) {
+	    	curData = prevGenerations.pop();
+	    	generation--;
+	    	showGrid();
 	    }
   	});
 
@@ -56,7 +62,6 @@ function placeAt(obj, row, column) {
 function beginSimulation() {
 	simulating = true;
 	simulate();
-	generations++;
 	if(changes > 0 && !stopSim) {
     	setTimeout(beginSimulation, 40);
 	} else {
@@ -69,9 +74,18 @@ function beginSimulation() {
 function simulate() {
 	changes = 0;
 	var nextData = [];
+	generation++;
+
 	for(var i = 0; i < curData.length; ++i){
 		nextData[i] = curData[i].simulate();
 	}
+
+	//save this generation
+	if(generation > maxGenerationsStored) {
+		prevGenerations = prevGenerations.slice(1);
+	}
+	prevGenerations.push(curData);
+	//now replace it
 	curData = nextData;
 	showGrid();
 }

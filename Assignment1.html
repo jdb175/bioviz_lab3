@@ -1,17 +1,33 @@
 <!DOCTYPE html>
 <html>
 	<head>
+		<style>
+		/*http://bl.ocks.org/mbostock/3371592*/
+
+		body {
+		  font: 10px sans-serif;
+		}
+
+		.axis path {
+		  fill: none; 
+		  stroke: black; 
+		  stroke-width: 1; 
+		}
+
+		.axis line {
+		  shape-rendering: crispEdges;
+		  stroke: #000;
+		}
+
+		</style>
 		<title>Game of Life</title>
 		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-		<script src="./BaseGame.js"></script>
 		<script src="./ClassicConfig.js"></script>
+		<script src="./BaseGame.js"></script>
 	</head>
 	<body>
 		<svg>
-			<g id = "populationChart">
-				<path id="line"/>
-				<path id="afterLine"/>
-			</g>
+			<g id = "populationChart"/>
 		</svg>
 		<br/>
 		Generation: <label id="Generation">0</label>

@@ -55,3 +55,27 @@ function Alive(row, column) {
 		placeAt(new Dead(row, column), row, column)
 	};
 }
+
+//counts adjacent cells of type
+function countAdjacent(type, row, column) {
+	var ret = 0;
+	//Iterate over adjacent
+	for(var i = row-1; i <=row+1; ++i){
+		for(var j = column-1; j <=column+1; ++j){
+			if(i < 0 || i >=rows)
+				continue
+			if(j < 0 || j >= columns)
+				continue
+			if(i == row && j == column)
+				continue
+
+			//Increment in dictionary
+			var index = (i*rows) + j;
+			if(curGeneration[index] instanceof type) {
+				++ret;
+			}
+		}
+	}
+
+	return ret;
+}

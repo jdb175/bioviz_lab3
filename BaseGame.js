@@ -58,15 +58,15 @@ window.onload = function () {
 	    		beginSimulation();
 	    	}
 	    } else if(evt.keyCode == 39 && !simulating) {
+	    	stopSim = false;
 	    	simulate();
 	    } else if(evt.keyCode == 37 && !simulating && prevGenerations.length > 0 && generation > 0) {
-	    	var oldState = prevGenerations.pop();
-	    	curGeneration = oldState.state;
-	    	population = oldState.population
-	    	generation = oldState.number;
-    		document.getElementById("Generation").innerHTML = generation;
-			document.getElementById("Population").innerHTML = population;
-	    	showGrid();
+	    	if(selectedGen == null) {
+	    		selectedGen = prevGenerations.length-1;
+	    	} else {
+	    		selectedGen--;
+	    	}
+	    	applySavedState(selectedGen);
 	    }
   	});
 
@@ -172,12 +172,36 @@ function showGrid(){
 	var line =d3.svg.line()
 		.x(function(d,i) { return xScale(d.number) })
 		.y(function(d,i) { return yScale(d.population) });
+	//handle before and after cursor
+	var beforeSelection = prevGenerations;
+	var afterSelection = [];
+	if(selectedGen != null) {
+		beforeSelection = prevGenerations.slice(0, selectedGen);
+		afterSelection = prevGenerations.slice(selectedGen-1);
+	}
 	//add it
+	canvas.select("#afterLine")
+			.attr('fill', 'none')
+			.attr("stroke-width",2)
+			.attr("stroke", "gray")
+			.attr("d", line(afterSelection));	
 	canvas.select("#line")
 			.attr('fill', 'none')
 			.attr("stroke-width",2)
 			.attr("stroke", "black")
-			.attr("d", line(prevGenerations));		
+			.attr("d", line(beforeSelection));		
+}
+
+function applySavedState(index) {
+	var selected = prevGenerations[index];
+	selectedGen = index;
+	curGeneration = selected.state;
+	generation = selected.number;
+	population = selected.population;
+	document.getElementById("Generation").innerHTML = generation;
+	document.getElementById("Population").innerHTML = population;
+	showGrid();
+	stopSim = true;
 }
 
 //Handles clicking at top level
@@ -189,15 +213,7 @@ function svgPaint (o) {
 		//Handle generation switching
 		var generationS = Math.round(mPos[0]/width*maxGenerationsStored);
 		if(generationS < prevGenerations.length) {
-			var selected = prevGenerations[generationS];
-			selectedGen = generationS;
-			curGeneration = selected.state;
-			generation = selected.number;
-			population = selected.population;
-    		document.getElementById("Generation").innerHTML = generation;
-			document.getElementById("Population").innerHTML = population;
-	    	showGrid();
-	    	stopSim = true;
+			applySavedState(generationS);
 		}
 	} else {
 		var row = Math.round(mPos[0]/width*rows - 0.5);
@@ -215,27 +231,4 @@ function svgPaint (o) {
 			document.getElementById("Population").innerHTML = population;
 		}
 	}
-}
-//counts adjacent cells
-function countAdjacent(type,row, column) {
-	var ret = 0;
-	//Iterate over adjacent
-	for(var i = row-1; i <=row+1; ++i){
-		for(var j = column-1; j <=column+1; ++j){
-			if(i < 0 || i >=rows)
-				continue
-			if(j < 0 || j >= columns)
-				continue
-			if(i == row && j == column)
-				continue
-
-			//Increment in dictionary
-			var index = (i*rows) + j;
-			if(curGeneration[index] instanceof type) {
-				++ret;
-			}
-		}
-	}
-
-	return ret;
 }

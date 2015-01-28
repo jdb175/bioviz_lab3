@@ -18,6 +18,7 @@ function Dead(row, column) {
 		//We become live iff have 3 alive neighbors
 		if(countAdjacent(Alive, row, column) == 3) {
 			changes++;
+			population++;
 			return new Alive(row, column);
 		} else {
 			return this;
@@ -25,6 +26,7 @@ function Dead(row, column) {
 	}
 
 	this.clicked = function() {
+		population++;
 		placeAt(new Alive(row, column), row, column)
 	};
 }
@@ -43,11 +45,13 @@ function Alive(row, column) {
 			return this;
 		} else {
 			changes++;
+			population--;
 			return new Dead(row, column);
 		}
 	}
 
 	this.clicked = function() {
+		population--;
 		placeAt(new Dead(row, column), row, column)
 	};
 }

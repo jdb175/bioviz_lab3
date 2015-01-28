@@ -1,12 +1,13 @@
 //Canvas settings
-var rows = 40;
-var columns = 40;
+var rows = 35;
+var columns = 35;
 var width = 600;
 var height = 600;
 var canvas;
 
 //State info
 var changes = 0;
+var population = 0;
 var stopSim = false;
 var simulating = false;
 var generation = 0;
@@ -15,6 +16,12 @@ var curGeneration = [];
 //Backtracking
 var prevGenerations = []
 var maxGenerationsStored = 400;
+//Class for saved state
+function savedState(state, number, population) {
+	this.state = state;
+	this.number = number;
+	this.population = population;
+}
 
 //handle mouse info
 var mouseDown = 0;
@@ -27,7 +34,9 @@ window.onload = function () {
 
 	canvas = d3.select("svg")
 		.attr("width", width)
-		.attr("height", height);
+		.attr("height", height)
+		.on('click', function() {svgPaint(this)})
+		.on('mouseover', function() {if(mouseDown) {svgPaint(this)}});
 
 	//Handle mouse listeners
 	document.body.onmousedown = function() { 
@@ -50,9 +59,12 @@ window.onload = function () {
 	    } else if(evt.keyCode == 39 && !simulating) {
 	    	simulate();
 	    } else if(evt.keyCode == 37 && !simulating && prevGenerations.length > 0 && generation > 0) {
-	    	curGeneration = prevGenerations.pop();
-	    	generation--;
+	    	var oldState = prevGenerations.pop();
+	    	curGeneration = oldState.state;
+	    	population = oldState.population
+	    	generation = oldState.number;
     		document.getElementById("Generation").innerHTML = generation;
+			document.getElementById("Population").innerHTML = population;
 	    	showGrid();
 	    }
   	});
@@ -64,6 +76,8 @@ function reset() {
 	SetInitialState();
 	prevGenerations = [];
 	generation = 0;
+	population = 0;
+	document.getElementById("Population").innerHTML = population;
 	document.getElementById("Generation").innerHTML = generation;
 	showGrid();
 }
@@ -91,6 +105,7 @@ function simulate() {
 	var nextData = [];
 
 	//now simulate next
+	var oldPop = population;
 	for(var i = 0; i < curGeneration.length; ++i){
 		nextData[i] = curGeneration[i].simulate();
 	}
@@ -99,10 +114,12 @@ function simulate() {
 		if(prevGenerations.length >= maxGenerationsStored) {
 			prevGenerations = prevGenerations.slice(1);
 		}
-		prevGenerations.push(curGeneration);
+		var curState = new savedState(curGeneration, generation, oldPop);
+		prevGenerations.push(curState);
 		//Advance generation
 		generation++;
 		document.getElementById("Generation").innerHTML = generation;
+		document.getElementById("Population").innerHTML = population;
 		curGeneration = nextData;
 		showGrid();
 	}
@@ -121,30 +138,29 @@ function showGrid(){
 		})
 		.attr("cx", function(d) {
 	        return d.row*width/rows+width/rows/2;
-		});
+		})
+		.attr("fill", function(d) { return d.color; } );
 
-	data.attr("fill", function(d) { return d.color; } )
-		//Painting stuff
-        .on('mouseover', function(d){ 
-        	if(mouseDown) {
-        		if(paintState == null) {
-        			paintState = d.constructor;
-        		}
-        		if(d instanceof paintState) {
-        			changes++; 
-        			d.clicked();
-        		}
-        	} 
-        })
-        .on('click', function(d){ 
-    		if(paintState == null) {
-    			paintState = d.constructor;
-    		}
-    		if(d instanceof paintState) {
-    			changes++; 
-    			d.clicked();
-    		}
-        });
+	data.transition().duration(100).attr("fill", function(d) { return d.color; } )
+}
+
+//Handles clicking at top level
+function svgPaint (o) {
+	var mPos = d3.mouse(o);
+	var row = Math.round(mPos[0]/width*rows - 0.5);
+	var col = Math.round(mPos[1]/width*columns - 0.5);
+	var index = (row*rows) + col;
+
+	var target = curGeneration[index];
+
+	if(paintState == null) {
+		paintState = target.constructor;
+	}
+	if(target instanceof paintState) {
+		changes++; 
+		target.clicked();
+		document.getElementById("Population").innerHTML = population;
+	}
 }
 //counts adjacent cells
 function countAdjacent(type,row, column) {

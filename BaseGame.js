@@ -116,7 +116,9 @@ function simulate() {
 	//now simulate next
 	var oldPop = population;
 	for(var i = 0; i < curGeneration.length; ++i){
-		nextData[i] = curGeneration[i].simulate();
+		var row = Math.floor(i/rows);
+		var column = i - row*rows;
+		nextData[i] = simItem(row, column, curGeneration[i]);
 	}
 	if(changes > 0) {
 		//Save current
@@ -143,15 +145,19 @@ function showGrid(){
 	data.enter()
 			.append("circle")
 		.attr("r", width/rows/2-1)
-		.attr("cy", function(d) {
-	        return d.column*width/rows+width/rows/2;
+		.attr("cy", function(d, i) {
+			var row = Math.floor(i/rows);
+			var column = i - row*rows;
+	        return column*width/rows+width/rows/2;
 		})
-		.attr("cx", function(d) {
-	        return d.row*width/rows+width/rows/2;
+		.attr("cx", function(d, i) {
+			var row = Math.floor(i/rows);
+			var column = i - row*rows;
+	        return row*width/rows+width/rows/2;
 		})
-		.attr("fill", function(d) { return d.color; } );
+		.attr("fill", function(d) { return getColor(d); } );
 
-	data.transition().duration(100).attr("fill", function(d) { return d.color; } )
+	data.transition().duration(100).attr("fill", function(d) { return getColor(d); } )
 
 	//Show population chart
 	//handle scales
@@ -223,12 +229,13 @@ function svgPaint (o) {
 		var target = curGeneration[index];
 
 		if(paintState == null) {
-			paintState = target.constructor;
+			paintState = target;
 		}
-		if(target instanceof paintState) {
+		if(target == paintState) {
 			changes++; 
-			target.clicked();
+			curGeneration[index] = clickItem(target);
 			document.getElementById("Population").innerHTML = population;
+			showGrid();
 		}
 	}
 }

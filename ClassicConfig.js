@@ -1,4 +1,7 @@
+/* Configuration of spaces for classic game of life
+*/
 function SetInitialState() {
+	curGeneration = [];
 	for(var i = 0; i < rows; ++i){
 		for(var j = 0; j < columns; ++j){
 			curGeneration.push(new Dead(i,j));

@@ -1,6 +1,6 @@
 //Canvas settings
-var rows = 50;
-var columns = 50;
+var rows = 40;
+var columns = 40;
 var width = 600;
 var height = 600;
 var canvas;
@@ -14,10 +14,11 @@ var curGeneration = [];
 
 //Backtracking
 var prevGenerations = []
-var maxGenerationsStored = 100;
+var maxGenerationsStored = 400;
 
 //handle mouse info
 var mouseDown = 0;
+var paintState = null;
 
 
 window.onload = function () {
@@ -34,6 +35,7 @@ window.onload = function () {
 	};
 	document.body.onmouseup = function() {
 	  --mouseDown;
+	  paintState = null;
 	};
 
 	//hitting space stops/starts the simulation,
@@ -47,7 +49,7 @@ window.onload = function () {
 	    	}
 	    } else if(evt.keyCode == 39 && !simulating) {
 	    	simulate();
-	    } else if(evt.keyCode == 37 && !simulating && prevGenerations.length > 0) {
+	    } else if(evt.keyCode == 37 && !simulating && prevGenerations.length > 0 && generation > 0) {
 	    	curGeneration = prevGenerations.pop();
 	    	generation--;
     		document.getElementById("Generation").innerHTML = generation;
@@ -55,6 +57,14 @@ window.onload = function () {
 	    }
   	});
 
+	showGrid();
+}
+
+function reset() {
+	SetInitialState();
+	prevGenerations = [];
+	generation = 0;
+	document.getElementById("Generation").innerHTML = generation;
 	showGrid();
 }
 
@@ -80,21 +90,22 @@ function simulate() {
 	changes = 0;
 	var nextData = [];
 
-	//save this generation
-	if(prevGenerations.length > maxGenerationsStored) {
-		prevGenerations = prevGenerations.slice(1);
-	}
-	prevGenerations.push(curGeneration);
-
-
 	//now simulate next
-	generation++;
-	document.getElementById("Generation").innerHTML = generation;
 	for(var i = 0; i < curGeneration.length; ++i){
 		nextData[i] = curGeneration[i].simulate();
 	}
-	curGeneration = nextData;
-	showGrid();
+	if(changes > 0) {
+		//Save current
+		if(prevGenerations.length >= maxGenerationsStored) {
+			prevGenerations = prevGenerations.slice(1);
+		}
+		prevGenerations.push(curGeneration);
+		//Advance generation
+		generation++;
+		document.getElementById("Generation").innerHTML = generation;
+		curGeneration = nextData;
+		showGrid();
+	}
 }
 
 //Shows the grid
@@ -113,13 +124,26 @@ function showGrid(){
 		});
 
 	data.attr("fill", function(d) { return d.color; } )
+		//Painting stuff
         .on('mouseover', function(d){ 
-        	if(mouseDown) { 
-        		d.clicked();
+        	if(mouseDown) {
+        		if(paintState == null) {
+        			paintState = d.constructor;
+        		}
+        		if(d instanceof paintState) {
+        			changes++; 
+        			d.clicked();
+        		}
         	} 
         })
         .on('click', function(d){ 
-    		d.clicked();
+    		if(paintState == null) {
+    			paintState = d.constructor;
+    		}
+    		if(d instanceof paintState) {
+    			changes++; 
+    			d.clicked();
+    		}
         });
 }
 //counts adjacent cells

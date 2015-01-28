@@ -1,8 +1,8 @@
 //Canvas settings
-var rows = 35;
-var columns = 35;
+var rows = 40;
+var columns = 40;
 var width = 600;
-var height = 600;
+var height = 800;
 var canvas;
 
 //State info
@@ -12,6 +12,7 @@ var stopSim = false;
 var simulating = false;
 var generation = 0;
 var curGeneration = [];
+var selectedGen = null;
 
 //Backtracking
 var prevGenerations = []
@@ -101,8 +102,16 @@ function beginSimulation() {
 
 //Simulate one step
 function simulate() {
+	if(stopSim)
+		return;
 	changes = 0;
 	var nextData = [];
+
+	//handle popping off generation state
+	if(selectedGen != null) {
+		prevGenerations = prevGenerations.slice(0,selectedGen);
+		selectedGen = null;
+	}
 
 	//now simulate next
 	var oldPop = population;
@@ -127,6 +136,7 @@ function simulate() {
 
 //Shows the grid
 function showGrid(){
+	//Show the grid
 	var data = canvas.selectAll("circle")
 		.data(curGeneration);
 
@@ -142,24 +152,68 @@ function showGrid(){
 		.attr("fill", function(d) { return d.color; } );
 
 	data.transition().duration(100).attr("fill", function(d) { return d.color; } )
+
+	//Show population chart
+	//handle scales
+	//We want to scale from 0 to the max population on y
+	var maxPop = Math.max.apply(Math,prevGenerations.map(function(o){return o.population;}));
+	var yScale = d3.scale.linear().domain([0, maxPop]).range([height, width]);
+
+	//and across our stored generations for x, without scaling across when we have stored less than max
+	var startGen = 0;
+	if(prevGenerations.length >= 1) {
+		startGen = prevGenerations[0].number;
+	}
+	var endGen = startGen + maxGenerationsStored;
+
+	var xScale = d3.scale.linear().domain([startGen, endGen]).range([0, width]);
+
+	//create a line
+	var line =d3.svg.line()
+		.x(function(d,i) { return xScale(d.number) })
+		.y(function(d,i) { return yScale(d.population) });
+	//add it
+	canvas.select("#line")
+			.attr('fill', 'none')
+			.attr("stroke-width",2)
+			.attr("stroke", "black")
+			.attr("d", line(prevGenerations));		
 }
 
 //Handles clicking at top level
 function svgPaint (o) {
 	var mPos = d3.mouse(o);
-	var row = Math.round(mPos[0]/width*rows - 0.5);
-	var col = Math.round(mPos[1]/width*columns - 0.5);
-	var index = (row*rows) + col;
+	if (mPos[0] > width) {
+		return;
+	} else if(mPos[1] > width) {
+		//Handle generation switching
+		var generationS = Math.round(mPos[0]/width*maxGenerationsStored);
+		if(generationS < prevGenerations.length) {
+			var selected = prevGenerations[generationS];
+			selectedGen = generationS;
+			curGeneration = selected.state;
+			generation = selected.number;
+			population = selected.population;
+    		document.getElementById("Generation").innerHTML = generation;
+			document.getElementById("Population").innerHTML = population;
+	    	showGrid();
+	    	stopSim = true;
+		}
+	} else {
+		var row = Math.round(mPos[0]/width*rows - 0.5);
+		var col = Math.round(mPos[1]/width*columns - 0.5);
+		var index = (row*rows) + col;
 
-	var target = curGeneration[index];
+		var target = curGeneration[index];
 
-	if(paintState == null) {
-		paintState = target.constructor;
-	}
-	if(target instanceof paintState) {
-		changes++; 
-		target.clicked();
-		document.getElementById("Population").innerHTML = population;
+		if(paintState == null) {
+			paintState = target.constructor;
+		}
+		if(target instanceof paintState) {
+			changes++; 
+			target.clicked();
+			document.getElementById("Population").innerHTML = population;
+		}
 	}
 }
 //counts adjacent cells

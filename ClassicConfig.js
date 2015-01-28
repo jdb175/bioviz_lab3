@@ -4,36 +4,36 @@ function SetInitialState() {
 	curGeneration = [];
 	for(var i = 0; i < rows; ++i){
 		for(var j = 0; j < columns; ++j){
-			curGeneration.push(0);
+			curGeneration.push(false);
 		}
 	}
 }
 
 function simItem(row, column, value) {
 	var liveCount = countAdjacent(1, row, column);
-	if(value == 0) {
+	if(!value) {
 		//We become live iff have 3 alive neighbors
 		if(liveCount == 3) {
 			changes++;
 			population++;
-			return 1;
+			return true;
 		} else {
-			return 0;
+			return false;
 		}
 	} else {
 		//We die if we have more than 2 or less than 3 alive neighbors
 		if(liveCount == 2 || liveCount == 3) {
-			return 1;
+			return true;
 		} else {
 			changes++;
 			population--;
-			return 0;
+			return false;
 		}
 	}
 }
 
 function clickItem(value) {
-	if(value == 0) {
+	if(!value) {
 		population ++;
 		return 1;
 	} else {

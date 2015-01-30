@@ -1,9 +1,9 @@
 //Canvas settings
 var rows = 40;
 var columns = 40;
-var width = 600;
-var height = 800;
-var sideMargin = 25;
+var width = 500;
+var height = 700;
+var sideMargin = 28;
 var betweenMargin = 10;
 var canvas;
 
@@ -41,12 +41,28 @@ window.onload = function () {
 		.on('click', function() {svgPaint(this)})
 		.on('mouseover', function() {if(mouseDown) {svgPaint(this)}});
 
+	//Add axis labels
+	canvas.append("text")
+	    .attr("class", "x label")
+	    .attr("text-anchor", "end")
+	    .attr("x", width+sideMargin)
+	    .attr("y", height+sideMargin - 4)
+	    .text("generation");
+	canvas.append("text")
+	    .attr("class", "y label")
+	    .attr("text-anchor", "end")
+	    .attr("y", width+sideMargin-4)
+	    .attr("x", -width-sideMargin-betweenMargin)
+	    .attr("dy", ".75em")
+	    .attr("transform", "rotate(-90)")
+	    .text("population");
+
 	//Handle mouse listeners
 	document.body.onmousedown = function() { 
-	  ++mouseDown;
+	  mouseDown = 1;
 	};
 	document.body.onmouseup = function() {
-	  --mouseDown;
+	  mouseDown = 0;
 	  paintState = null;
 	};
 
@@ -143,7 +159,7 @@ function showGrid(){
 
 	data.enter()
 			.append("circle")
-		.attr("r", width/rows/2-1)
+		.attr("r", width/rows/2-0.5)
 		.attr("cy", function(d, i) {
 			var row = Math.floor(i/rows);
 			var column = i - row*rows;
@@ -156,15 +172,18 @@ function showGrid(){
 		})
 		.attr("fill", function(d) { return getColor(d); } );
 
-	data.transition().duration(100).attr("fill", function(d) { return getColor(d); } )
+	data.attr("fill", function(d) { return getColor(d); } )
 }
 
 function showPopulationGraph() {
 	//Show population chart
+	//clear existing gs
+	canvas.selectAll("g")
+		.remove();
 	//handle scales
 	//We want to scale from 0 to the max population on y
 	var maxPop = Math.max.apply(Math,prevGenerations.map(function(o){return o.population;}));
-	var yScale = d3.scale.linear().domain([0, Math.max(10, maxPop)]).range([height+betweenMargin+sideMargin, width+betweenMargin+sideMargin]);
+	var yScale = d3.scale.linear().domain([0, Math.max(10, maxPop)]).range([height+sideMargin, width+betweenMargin+sideMargin]);
 
 	//and across our stored generations for x, without scaling across when we have stored less than max
 	var startGen = 0;
@@ -173,29 +192,6 @@ function showPopulationGraph() {
 	}
 	var endGen = startGen + maxGenerationsStored;
 	var xScale = d3.scale.linear().domain([startGen, endGen]).range([sideMargin, width+sideMargin]);
-
-	//Handle Axes
-	var xAxis = d3.svg.axis()
-		.scale(xScale)
-		.orient("bottom");
-	var yAxis = d3.svg.axis()
-		.scale(yScale)
-		.orient("right");
-
-	//Create an SVG group Element for the Axis elements and add axes
-	canvas.selectAll("g")
-		.remove();
-	canvas.append("g")
-		.attr("class", "x axis")
-		.attr("transform", "translate(0, "+(height+sideMargin+betweenMargin)+")")
-		.call(xAxis);
-	canvas.append("g")
-		.attr("transform", "translate("+(width+sideMargin)+", 0)")
-	    .attr("class", "y axis")
-	    .call(yAxis)
-	    .selectAll("line")
-	    .attr("x1", -(width))
-	    .attr("stroke-dasharray", "2,2");
 
 	//Now draw the line(s)
 	var line =d3.svg.line()
@@ -206,7 +202,7 @@ function showPopulationGraph() {
 	var afterSelection = [];
 	if(selectedGen != null) {
 		beforeSelection = prevGenerations.slice(0, selectedGen);
-		afterSelection = prevGenerations.slice(selectedGen-1);
+		afterSelection = prevGenerations.slice(Math.max(0, selectedGen-1));
 	}
 	//add it
 	var group = canvas.append('g')
@@ -214,16 +210,39 @@ function showPopulationGraph() {
 
 	group.append('path')
 		.attr('id', '#afterLine')
-		.attr('fill', 'lightblue')
-		.attr("stroke-width",2)
-		.attr("stroke", "gray")
+		.attr('fill', '#2D5866')
+		.attr('fill-opacity', 0.4)
+		.attr("stroke-width",1.5)
+		.attr("stroke", "black")
+		.attr('stroke-opacity', 0.5)
 		.attr("d", line(processDataforPolygon(afterSelection)));	
 	group.append('path')
 		.attr('id', '#beforeLine')
-		.attr('fill', 'blue')
-		.attr("stroke-width",2)
+		.attr('fill', 'lightblue')
+		.attr("stroke-width",1.5)
 		.attr("stroke", "black")
 		.attr("d", line(processDataforPolygon(beforeSelection)));
+
+	//Handle Axes
+	var xAxis = d3.svg.axis()
+		.scale(xScale)
+		.orient("bottom");
+	var yAxis = d3.svg.axis()
+		.scale(yScale)
+		.orient("right");
+
+	//Create an SVG group Element for the Axis elements and add axes
+	canvas.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0, "+(height+sideMargin)+")")
+		.call(xAxis);
+	canvas.append("g")
+		.attr("transform", "translate("+(width+sideMargin)+", 0)")
+	    .attr("class", "y axis")
+	    .call(yAxis)
+	    .selectAll("line")
+	    .attr("x1", -(width))
+	    .attr("stroke-dasharray", "2,2");
 }
 
 //create a polygon dataset from data (adding points to fill shape)
@@ -257,12 +276,12 @@ function svgPaint (o) {
 	var mPos = d3.mouse(o);
 	mPos[0] -= sideMargin;
 	mPos[1] -= sideMargin;
-	if (mPos[0] > width) {
+	if (mPos[0] > width || mPos[0] < 0) {
 		return;
 	} else if(mPos[1] > width+betweenMargin && mPos[1] < height) {
 		//Handle generation switching
 		var generationS = Math.round(mPos[0]/width*maxGenerationsStored);
-		if(generationS < prevGenerations.length) {
+		if(generationS < prevGenerations.length && generationS >= 0) {
 			applySavedState(generationS);
 		} else if(selectedGen != null) {
 			applySavedState(prevGenerations[prevGenerations.length-1].number);

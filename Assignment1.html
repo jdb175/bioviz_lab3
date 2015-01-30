@@ -5,17 +5,20 @@
 		/*http://bl.ocks.org/mbostock/3371592*/
 
 		body {
-		  font: 10px sans-serif;
+		  font: 11px sans-serif;
+		  moz-user-select: -moz-none;
+		  -khtml-user-select: none;
+		  -webkit-user-select: none;
 		}
 
 		.axis path {
 		  fill: none; 
-		  stroke: black; 
-		  stroke-width: 1; 
+		  stroke: none; 
 		}
 
 		.axis line {
 		  shape-rendering: crispEdges;
+		  stroke-opacity:0.25;
 		  stroke: #000;
 		}
 

@@ -1,6 +1,6 @@
 //Canvas settings
-var rows = 40;
-var columns = 40;
+var rows = 45;
+var columns = 45;
 var width = 500;
 var height = 700;
 var sideMargin = 28;
@@ -41,22 +41,6 @@ window.onload = function () {
 		.on('click', function() {svgPaint(this)})
 		.on('mouseover', function() {if(mouseDown) {svgPaint(this)}});
 
-	//Add axis labels
-	canvas.append("text")
-	    .attr("class", "x label")
-	    .attr("text-anchor", "end")
-	    .attr("x", width+sideMargin)
-	    .attr("y", height+sideMargin - 4)
-	    .text("generation");
-	canvas.append("text")
-	    .attr("class", "y label")
-	    .attr("text-anchor", "end")
-	    .attr("y", width+sideMargin-4)
-	    .attr("x", -width-sideMargin-betweenMargin)
-	    .attr("dy", ".75em")
-	    .attr("transform", "rotate(-90)")
-	    .text("population");
-
 	//Handle mouse listeners
 	document.body.onmousedown = function() { 
 	  mouseDown = 1;
@@ -76,8 +60,14 @@ window.onload = function () {
 	    		beginSimulation();
 	    	}
 	    } else if(evt.keyCode == 39 && !simulating) {
-	    	stopSim = false;
-	    	simulate();
+	    	if(selectedGen == null || selectedGen >= prevGenerations.length) {
+	    		selectedGen = null;
+		    	stopSim = false;
+		    	simulate();
+	    	} else {
+	    		selectedGen++;
+		    	applySavedState(selectedGen);
+	    	}
 	    } else if(evt.keyCode == 37 && !simulating && prevGenerations.length > 0 && generation > 0) {
 	    	if(selectedGen == null) {
 	    		selectedGen = prevGenerations.length-1;
@@ -101,6 +91,20 @@ function reset() {
 	document.getElementById("Generation").innerHTML = generation;
 	showGrid();
 	showPopulationGraph();
+	document.getElementById("resetButton").blur()
+}
+
+function randomize() {
+	stopSim = true;
+	prevGenerations = [];
+	generation = 0;
+	population = 0;
+	SetRandomState();
+	document.getElementById("Population").innerHTML = population;
+	document.getElementById("Generation").innerHTML = generation;
+	showGrid();
+	showPopulationGraph();
+	document.getElementById("randomizeButton").blur();
 }
 
 function beginSimulation() {
@@ -191,7 +195,7 @@ function showPopulationGraph() {
 		startGen = prevGenerations[0].number;
 	}
 	var endGen = startGen + maxGenerationsStored;
-	var xScale = d3.scale.linear().domain([startGen, endGen]).range([sideMargin, width+sideMargin]);
+	var xScale = d3.scale.linear().domain([startGen, endGen]).range([sideMargin, width+sideMargin+6]);
 
 	//Now draw the line(s)
 	var line =d3.svg.line()
@@ -224,6 +228,7 @@ function showPopulationGraph() {
 		.attr("d", line(processDataforPolygon(beforeSelection)));
 
 	//Handle Axes
+	canvas.selectAll("text").remove();
 	var xAxis = d3.svg.axis()
 		.scale(xScale)
 		.orient("bottom");
@@ -237,12 +242,29 @@ function showPopulationGraph() {
 		.attr("transform", "translate(0, "+(height+sideMargin)+")")
 		.call(xAxis);
 	canvas.append("g")
-		.attr("transform", "translate("+(width+sideMargin)+", 0)")
 	    .attr("class", "y axis")
+		.attr("transform", "translate("+(width+sideMargin)+",0)")
 	    .call(yAxis)
 	    .selectAll("line")
 	    .attr("x1", -(width))
 	    .attr("stroke-dasharray", "2,2");
+
+	//Handle axes
+	//Add axis labels
+	canvas.append("text")
+	    .attr("class", "x label")
+	    .attr("text-anchor", "end")
+	    .attr("x", width+sideMargin)
+	    .attr("y", height+sideMargin - 4)
+	    .text("generation");
+	canvas.append("text")
+	    .attr("class", "y label")
+	    .attr("text-anchor", "end")
+	    .attr("y", width+sideMargin-4)
+	    .attr("x", -width-sideMargin-betweenMargin)
+	    .attr("dy", ".75em")
+	    .attr("transform", "rotate(-90)")
+	    .text("population");
 }
 
 //create a polygon dataset from data (adding points to fill shape)

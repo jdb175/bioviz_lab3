@@ -22,19 +22,64 @@
 		  stroke: #000;
 		}
 
+		.leftpanel {
+			margin: none;
+			float: left;
+		}
+
+		.rightpanel {
+			margin: none;
+			width: 250px;
+			font: 12px sans-serif;
+			float: left;
+		}
+
+		h1 { color: #111; font-family: 'Helvetica Neue', sans-serif; font-size: 40px; font-weight: bold; letter-spacing: -1px; line-height: 1; text-align: center; margin-bottom: 12px;}
+
+		h2 { color: #111; font-family: 'Open Sans', sans-serif; font-size: 18px; font-weight: bold; line-height: 18px; text-align: center; }
+
+		p, li { color: #685206; font-family: 'Helvetica Neue', sans-serif; font-size: 10px; line-height: 12px; margin: 0 0 12px; text-align: justify; text-justify: inter-word; }
+
 		</style>
 		<title>Game of Life</title>
-		<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+		<script src="./d3min.js" charset="utf-8"></script>
 		<script src="./ClassicConfig.js"></script>
 		<script src="./BaseGame.js"></script>
 	</head>
-	<body>
-		<svg>
-			<g id = "populationChart"/>
-		</svg>
-		<br/>
-		Generation: <label id="Generation">0</label>
-		Population: <label id="Population">0</label>
-		<button onclick="reset()">Reset</button>
+	<body bgcolor="#fdfcf9">
+		<div style="width:810px;margin:auto;padding:none;">
+		<div class="leftpanel">
+			<svg>
+				<g id = "populationChart"/>
+			</svg>
+			<br/>
+			<button onclick="reset()" id="resetButton">Reset</button>
+			<button onclick="randomize()" id='randomizeButton'>Randomize</button>
+			Generation: <label id="Generation">0</label>
+			Population: <label id="Population">0</label>
+		</div>
+		<div class="rightpanel">
+			<h1>Game of life</h1>
+			<h2>About</h2>
+			<p>This is a simulation of Conway's game of life. The grid of cells can either be <b>alive</b> (blue) or <b>dead</b> (gray). The behavior of these cells is based on four rules:</p>
+
+			<ul>
+				<li>Any live cell with fewer than two live neighbours dies, as if caused by under-population.</li>
+				<li>Any live cell with two or three live neighbours lives on to the next generation.</li>
+				<li>Any live cell with more than three live neighbours dies, as if by overcrowding.</li>
+				<li>Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.</li>
+			</ul>
+			</p>
+			<h2>Controls</h2>
+			<ul>
+				<li><b>Click or drag</b> on the grid to paint live cells on the board.</li>
+				<li>Hit <b>space</b> to start or stop the simulation.</li>
+				<li>Use <b>left</b> and <b>right</b> arrows to go one generation forward or back on the timeline. This will not actually simulate as long as there is available history, only replay saved states.</li>
+				<li>The graph along the bottom shows population over generations.</li>
+				<li><b>Click</b> the bottom to jump to a previous generation. Up to 400 previous generations will be saved.</li>
+				<li>Use the bottom buttons to reset the board to empty or randomize it.</li>
+			</ul>
+		</div>
+		</div>
 	</body>
 </html>

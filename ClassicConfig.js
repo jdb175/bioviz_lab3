@@ -9,6 +9,19 @@ function SetInitialState() {
 	}
 }
 
+
+function SetRandomState() {
+	curGeneration = [];
+	for(var i = 0; i < rows; ++i){
+		for(var j = 0; j < columns; ++j){
+			var val = Math.random() >0.5;
+			population += val;
+			curGeneration.push(val);
+		}
+	}
+}
+
+
 function simItem(row, column, value) {
 	var liveCount = countAdjacent(1, row, column);
 	if(!value) {

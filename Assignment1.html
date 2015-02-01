@@ -47,7 +47,7 @@
 		<script src="./BaseGame.js"></script>
 	</head>
 	<body bgcolor="#fdfcf9">
-		<div style="width:810px;margin:auto;padding:none;">
+		<div style="width:830px;margin:auto;padding:none;">
 		<div class="leftpanel">
 			<svg>
 				<g id = "populationChart"/>
@@ -73,12 +73,13 @@
 			<h2>Controls</h2>
 			<ul>
 				<li><b>Click or drag</b> on the grid to paint live cells on the board.</li>
-				<li>Hit <b>space</b> to start or stop the simulation.</li>
+				<li>Hit <b>space</b> to start or stop the simulation. It will stop automatically if no changes are occurring.</li>
 				<li>Use <b>left</b> and <b>right</b> arrows to go one generation forward or back on the timeline. This will not actually simulate as long as there is available history, only replay saved states.</li>
 				<li>The graph along the bottom shows population over generations.</li>
-				<li><b>Click</b> the bottom to jump to a previous generation. Up to 400 previous generations will be saved.</li>
+				<li><b>Click</b> the bottom to jump to generation. Up to 400 previous generations will be saved. Clicking forward on the bottom will fastfoward to that generation.</li>
 				<li>Use the bottom buttons to reset the board to empty or randomize it.</li>
 			</ul>
+			<p>Check it out on <a href="https://github.com/jdb175/bioviz-life">Github</a>.</p>
 		</div>
 		</div>
 	</body>

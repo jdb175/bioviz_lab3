@@ -3,13 +3,14 @@ var rows = 45;
 var columns = 45;
 var width = 500;
 var height = 700;
-var sideMargin = 28;
+var sideMargin = 38;
 var betweenMargin = 10;
 var canvas;
 
 //State info
 var changes = 0;
 var population = 0;
+var painted = false;
 var stopSim = false;
 var simulating = false;
 var generation = 0;
@@ -60,10 +61,14 @@ window.onload = function () {
 	    		beginSimulation();
 	    	}
 	    } else if(evt.keyCode == 39 && !simulating) {
-	    	if(selectedGen == null || selectedGen >= prevGenerations.length) {
+	    	if(selectedGen == null || selectedGen >= prevGenerations.length || painted) {
+	    		if(painted && selectedGen) {
+	    			prevGenerations = prevGenerations.slice(0, selectedGen)
+	    			saveState();
+	    		}
 	    		selectedGen = null;
 		    	stopSim = false;
-		    	simulate();
+		    	simulate(true);
 	    	} else {
 	    		selectedGen++;
 		    	applySavedState(selectedGen);
@@ -92,6 +97,7 @@ function reset() {
 	showGrid();
 	showPopulationGraph();
 	document.getElementById("resetButton").blur()
+	saveState();
 }
 
 function randomize() {
@@ -105,11 +111,15 @@ function randomize() {
 	showGrid();
 	showPopulationGraph();
 	document.getElementById("randomizeButton").blur();
+	saveState();
 }
 
 function beginSimulation() {
+	if(prevGenerations.length == 0){
+		saveState();
+	}
 	simulating = true;
-	simulate();
+	simulate(true);
 	if(changes > 0 && !stopSim) {
     	setTimeout(beginSimulation, 40);
 	} else {
@@ -119,40 +129,47 @@ function beginSimulation() {
 }
 
 //Simulate one step
-function simulate() {
+function simulate(showGraphs) {
+	painted = false;
 	if(stopSim)
 		return;
 	changes = 0;
 	var nextData = [];
-
 	//handle popping off generation state
 	if(selectedGen != null) {
 		prevGenerations = prevGenerations.slice(0,selectedGen);
 		selectedGen = null;
+		saveState();
 	}
 
 	//now simulate next
-	var oldPop = population;
 	for(var i = 0; i < curGeneration.length; ++i){
 		var row = Math.floor(i/rows);
 		var column = i - row*rows;
 		nextData[i] = simItem(row, column, curGeneration[i]);
 	}
+
 	if(changes > 0) {
-		//Save current
-		if(prevGenerations.length >= maxGenerationsStored) {
-			prevGenerations = prevGenerations.slice(1);
-		}
-		var curState = new savedState(curGeneration, generation, oldPop);
-		prevGenerations.push(curState);
 		//Advance generation
 		generation++;
-		document.getElementById("Generation").innerHTML = generation;
-		document.getElementById("Population").innerHTML = population;
 		curGeneration = nextData;
-		showGrid();
-		showPopulationGraph();	
+		if(showGraphs) {
+			document.getElementById("Generation").innerHTML = generation;
+			document.getElementById("Population").innerHTML = population;
+			showGrid();
+			showPopulationGraph();	
+		}
+		saveState();
 	}
+}
+
+function saveState() {
+	//Save current
+	if(prevGenerations.length >= maxGenerationsStored) {
+		prevGenerations = prevGenerations.slice(1);
+	}
+	var curState = new savedState(curGeneration, generation, population);
+	prevGenerations.push(curState);
 }
 
 //Shows the grid
@@ -179,7 +196,7 @@ function showGrid(){
 	data.attr("fill", function(d) { return getColor(d); } )
 }
 
-function showPopulationGraph() {
+function showPopulationGraph(showCharts) {
 	//Show population chart
 	//clear existing gs
 	canvas.selectAll("g")
@@ -280,7 +297,39 @@ function processDataforPolygon (d) {
 	return poly;
 }
 
+function applyState(index) {
+	if(index < prevGenerations.length && (index < generation || !painted)) {
+		applySavedState(index);
+	} else {
+		simulateTo(index);
+	}
+}
+
+function simulateTo(index) {
+	selectedGen = index;
+	var mostRecentOnHistory = prevGenerations[prevGenerations.length-1];
+	if(mostRecentOnHistory != null && generation < mostRecentOnHistory.number){
+		if(painted) {
+			prevGenerations = prevGenerations.slice(0, generation-1)
+		} else {
+			generation = mostRecentOnHistory.number;
+			population = mostRecentOnHistory.population;
+			curGeneration = mostRecentOnHistory.state;
+		}
+	}
+	var amount = index-generation;
+	stopSim = false;
+	for(var i = 0; i < amount; ++i){
+		simulate(false);
+	}
+	document.getElementById("Generation").innerHTML = generation;
+	document.getElementById("Population").innerHTML = population;
+	showGrid();
+	showPopulationGraph();
+}
+
 function applySavedState(index) {
+	painted = false;
 	var selected = prevGenerations[index];
 	selectedGen = index;
 	curGeneration = selected.state;
@@ -303,10 +352,8 @@ function svgPaint (o) {
 	} else if(mPos[1] > width+betweenMargin && mPos[1] < height) {
 		//Handle generation switching
 		var generationS = Math.round(mPos[0]/width*maxGenerationsStored);
-		if(generationS < prevGenerations.length && generationS >= 0) {
-			applySavedState(generationS);
-		} else if(selectedGen != null) {
-			applySavedState(prevGenerations[prevGenerations.length-1].number);
+		if(generationS >= 0) {
+			applyState(generationS);
 		}
 	} else {
 		var row = Math.round(mPos[0]/width*rows - 0.5);
@@ -319,6 +366,7 @@ function svgPaint (o) {
 			paintState = target;
 		}
 		if(target == paintState) {
+			painted = true;
 			changes++; 
 			curGeneration[index] = clickItem(target);
 			document.getElementById("Population").innerHTML = population;

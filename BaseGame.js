@@ -64,7 +64,6 @@ window.onload = function () {
 	    	if(selectedGen == null || selectedGen >= prevGenerations.length || painted) {
 	    		if(painted && selectedGen) {
 	    			prevGenerations = prevGenerations.slice(0, selectedGen)
-	    			saveState();
 	    		}
 	    		selectedGen = null;
 		    	stopSim = false;
@@ -97,7 +96,6 @@ function reset() {
 	showGrid();
 	showPopulationGraph();
 	document.getElementById("resetButton").blur()
-	saveState();
 }
 
 function randomize() {
@@ -111,13 +109,9 @@ function randomize() {
 	showGrid();
 	showPopulationGraph();
 	document.getElementById("randomizeButton").blur();
-	saveState();
 }
 
 function beginSimulation() {
-	if(prevGenerations.length == 0){
-		saveState();
-	}
 	simulating = true;
 	simulate(true);
 	if(changes > 0 && !stopSim) {
@@ -139,10 +133,10 @@ function simulate(showGraphs) {
 	if(selectedGen != null) {
 		prevGenerations = prevGenerations.slice(0,selectedGen);
 		selectedGen = null;
-		saveState();
 	}
 
 	//now simulate next
+	var oldPop = population;
 	for(var i = 0; i < curGeneration.length; ++i){
 		var row = Math.floor(i/rows);
 		var column = i - row*rows;
@@ -150,6 +144,13 @@ function simulate(showGraphs) {
 	}
 
 	if(changes > 0) {
+		//Save current
+		if(prevGenerations.length >= maxGenerationsStored) {
+			prevGenerations = prevGenerations.slice(1);
+		}
+		var curState = new savedState(curGeneration, generation, oldPop);
+		prevGenerations.push(curState);
+
 		//Advance generation
 		generation++;
 		curGeneration = nextData;
@@ -159,17 +160,7 @@ function simulate(showGraphs) {
 			showGrid();
 			showPopulationGraph();	
 		}
-		saveState();
 	}
-}
-
-function saveState() {
-	//Save current
-	if(prevGenerations.length >= maxGenerationsStored) {
-		prevGenerations = prevGenerations.slice(1);
-	}
-	var curState = new savedState(curGeneration, generation, population);
-	prevGenerations.push(curState);
 }
 
 //Shows the grid

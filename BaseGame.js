@@ -41,7 +41,7 @@ window.onload = function () {
 	canvas = d3.select("svg")
 		.attr("width", width + 2*sideMargin)
 		.attr("height", height + 2*sideMargin + betweenMargin)
-		.on('click', function() {svgPaint(this)})
+		.on('click', function() {svgMouse(this)})
 		.on('mouseover', function() {if(mouseDown) {svgPaint(this)}});
 
 	showGrid();
@@ -58,72 +58,10 @@ window.onload = function () {
 
 	//hitting space stops/starts the simulation,
 	//the right arrow moves it forward
-	document.onkeydown = (function(evt) {
-	    if (evt.keyCode == 32) { //space bar
-	    	//If we hit the
-	    	if(simulating) {
-	    		stopSim = true;
-	    	} else {
-	    		beginSimulation();
-	    	}
-	    } else if(evt.keyCode == 39 && !simulating) { //right arrow
-	    	//The right arrow moves forward a generation
-	    	if(selectedGen == null || selectedGen >= prevGenerations.length || painted) {
-	    		//If we are not able to pull from history, or we have painted (meaning history is not useful)
-	    		//We simulate one step
-	    		if(painted && selectedGen) {
-	    			prevGenerations = prevGenerations.slice(0, selectedGen)
-	    		}
-	    		selectedGen = null;
-		    	stopSim = false;
-		    	simulate(true);
-	    	} else {
-	    		//Otherwise we just move the selected state forward and pull it form history
-	    		selectedGen++;
-		    	applySavedState(selectedGen);
-	    	}
-	    } else if(evt.keyCode == 37 && !simulating && prevGenerations.length > 0 && generation > 0) { //left arrow
-	    	//As long as there is a state before us, we pull it from history and apply it
-	    	if(selectedGen == null) {
-	    		selectedGen = prevGenerations.length-1;
-	    	} else {
-	    		selectedGen--;
-	    	}
-	    	applySavedState(selectedGen);
-	    }
-  	});
+	document.onkeydown = (handleKeyPress);
 }
 
-/*
-	Resets the game state, clears history
-*/
-function reset() {
-	SetInitialState();
-	prevGenerations = [];
-	generation = 0;
-	population = 0;
-	document.getElementById("Population").innerHTML = population;
-	document.getElementById("Generation").innerHTML = generation;
-	showGrid();
-	showPopulationGraph();
-	document.getElementById("resetButton").blur()
-}
-
-/*
-	Resets the game state to a random state, clears history
-*/
-function randomize() {
-	stopSim = true;
-	prevGenerations = [];
-	generation = 0;
-	population = 0;
-	SetRandomState();
-	document.getElementById("Population").innerHTML = population;
-	document.getElementById("Generation").innerHTML = generation;
-	showGrid();
-	showPopulationGraph();
-	document.getElementById("randomizeButton").blur();
-}
+/************ SIMULATION ***********/
 
 /*
 	Begins the simulation on timeout
@@ -182,6 +120,102 @@ function simulate(showGraphs) {
 		}
 	}
 }
+
+/*
+	Applies a saved state to be current
+*/
+function applySavedState(index) {
+	painted = false;
+	var selected = prevGenerations[index];
+	selectedGen = index;
+	curGeneration = selected.state;
+	generation = selected.number;
+	population = selected.population;
+	document.getElementById("Generation").innerHTML = generation;
+	document.getElementById("Population").innerHTML = population;
+	showGrid();
+	showPopulationGraph();
+	stopSim = true;
+}
+
+/*
+	Applies the state at given index in the history. If the index is beyond the
+	history or the current state is dirty and we are moving forward, we fastforward
+	to it
+*/
+function applyState(index) {
+	if(index < prevGenerations.length && (index < generation || !painted)) {
+		applySavedState(index);
+	} else {
+		simulateTo(index);
+	}
+}
+
+/*
+	Simulates to the generation equivalent to given index in history
+	(can be higher than max index in history)
+*/
+function simulateTo(index) {
+	//Find starting state and generations to simulate
+	selectedGen = index;
+	var mostRecentOnHistory = prevGenerations[prevGenerations.length-1];
+	if(mostRecentOnHistory != null && generation < mostRecentOnHistory.number){
+		if(painted) {
+			//If we've painted, then all history after us is corrupted
+			prevGenerations = prevGenerations.slice(0, generation-1)
+		} else {
+			// otherwise we start at most recent history state
+			generation = mostRecentOnHistory.number;
+			population = mostRecentOnHistory.population;
+			curGeneration = mostRecentOnHistory.state;
+		}
+	}
+	//simulate as many times as necessary to get there
+	var amount = index-generation;
+	stopSim = false;
+	for(var i = 0; i < amount; ++i){
+		simulate(false);
+	}
+
+	//Show visuals
+	document.getElementById("Generation").innerHTML = generation;
+	document.getElementById("Population").innerHTML = population;
+	showGrid();
+	showPopulationGraph();
+}
+
+/*
+	Resets the game state, clears history
+*/
+function reset() {
+	SetInitialState();
+	prevGenerations = [];
+	generation = 0;
+	population = 0;
+	document.getElementById("Population").innerHTML = population;
+	document.getElementById("Generation").innerHTML = generation;
+	showGrid();
+	showPopulationGraph();
+	document.getElementById("resetButton").blur()
+}
+
+/*
+	Resets the game state to a random state, clears history
+*/
+function randomize() {
+	stopSim = true;
+	prevGenerations = [];
+	generation = 0;
+	population = 0;
+	SetRandomState();
+	document.getElementById("Population").innerHTML = population;
+	document.getElementById("Generation").innerHTML = generation;
+	showGrid();
+	showPopulationGraph();
+	document.getElementById("randomizeButton").blur();
+}
+
+/********** GRAPHICS **********/
 
 /*
 	Populates the grid
@@ -315,74 +349,13 @@ function processDataforPolygon (d) {
 	return poly;
 }
 
-/*
-	Applies the state at given index in the history. If the index is beyond the
-	history or the current state is dirty and we are moving forward, we fastforward
-	to it
-*/
-function applyState(index) {
-	if(index < prevGenerations.length && (index < generation || !painted)) {
-		applySavedState(index);
-	} else {
-		simulateTo(index);
-	}
-}
-
-/*
-	Simulates to the generation equivalent to given index in history
-	(can be higher than max index in history)
-*/
-function simulateTo(index) {
-	//Find starting state and generations to simulate
-	selectedGen = index;
-	var mostRecentOnHistory = prevGenerations[prevGenerations.length-1];
-	if(mostRecentOnHistory != null && generation < mostRecentOnHistory.number){
-		if(painted) {
-			//If we've painted, then all history after us is corrupted
-			prevGenerations = prevGenerations.slice(0, generation-1)
-		} else {
-			// otherwise we start at most recent history state
-			generation = mostRecentOnHistory.number;
-			population = mostRecentOnHistory.population;
-			curGeneration = mostRecentOnHistory.state;
-		}
-	}
-	//simulate as many times as necessary to get there
-	var amount = index-generation;
-	stopSim = false;
-	for(var i = 0; i < amount; ++i){
-		simulate(false);
-	}
-
-	//Show visuals
-	document.getElementById("Generation").innerHTML = generation;
-	document.getElementById("Population").innerHTML = population;
-	showGrid();
-	showPopulationGraph();
-}
-
-/*
-	Applies a saved state to be current
-*/
-function applySavedState(index) {
-	painted = false;
-	var selected = prevGenerations[index];
-	selectedGen = index;
-	curGeneration = selected.state;
-	generation = selected.number;
-	population = selected.population;
-	document.getElementById("Generation").innerHTML = generation;
-	document.getElementById("Population").innerHTML = population;
-	showGrid();
-	showPopulationGraph();
-	stopSim = true;
-}
+/********** LISTENERS **********/
 
 /*
 	Top-level mouse handling for svg to improve performance. Decides whether to 
 	paint the grid or control the lower chart.
 */
-function svgPaint (o) {
+function svgMouse (o) {
 	var mPos = d3.mouse(o);
 	mPos[0] -= sideMargin;
 	mPos[1] -= sideMargin;
@@ -412,4 +385,43 @@ function svgPaint (o) {
 			showGrid();
 		}
 	}
+}
+
+/*
+	Handles key presses. Space starts/stops simulation. Right arrow moves forward
+	one generation. Left arrow moves back one
+*/
+function handleKeyPress(evt) {
+    if (evt.keyCode == 32) { //space bar
+    	//If we hit the
+    	if(simulating) {
+    		stopSim = true;
+    	} else {
+    		beginSimulation();
+    	}
+    } else if(evt.keyCode == 39 && !simulating) { //right arrow
+    	//The right arrow moves forward a generation
+    	if(selectedGen == null || selectedGen >= prevGenerations.length || painted) {
+    		//If we are not able to pull from history, or we have painted (meaning history is not useful)
+    		//We simulate one step
+    		if(painted && selectedGen) {
+    			prevGenerations = prevGenerations.slice(0, selectedGen)
+    		}
+    		selectedGen = null;
+	    	stopSim = false;
+	    	simulate(true);
+    	} else {
+    		//Otherwise we just move the selected state forward and pull it form history
+    		selectedGen++;
+	    	applySavedState(selectedGen);
+    	}
+    } else if(evt.keyCode == 37 && !simulating && prevGenerations.length > 0 && generation > 0) { //left arrow
+    	//As long as there is a state before us, we pull it from history and apply it
+    	if(selectedGen == null) {
+    		selectedGen = prevGenerations.length-1;
+    	} else {
+    		selectedGen--;
+    	}
+    	applySavedState(selectedGen);
+    }
 }

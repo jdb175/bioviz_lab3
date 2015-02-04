@@ -18,7 +18,8 @@ The population over time can be seen in the chart at the bottom of the page, for
 generations. It is possible to ump to a previous or future generation by clicking on the chart.
 This is the primary technical achievement of this implementation, along with the interactive
 cell painting. It allows the user to review what has happened, and also to experiment with how
-changes affect the outcome of the simulation.
+changes affect the outcome of the simulation. This is not directly a bio-related addition, but
+it connects with the way that biologists interact with simulations.
 
 The code is my own.
 

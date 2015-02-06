@@ -42,7 +42,7 @@ window.onload = function () {
 		.attr("width", width + 2*sideMargin)
 		.attr("height", height + 2*sideMargin + betweenMargin)
 		.on('click', function() {svgMouse(this)})
-		.on('mouseover', function() {if(mouseDown) {svgPaint(this)}});
+		.on('mouseover', function() {if(mouseDown) {svgMouse(this)}});
 
 	showGrid();
 	showPopulationGraph();

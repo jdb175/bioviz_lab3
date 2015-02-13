@@ -61,7 +61,7 @@ function getColor(value, trails) {
 	} else if(value == 0 || !trails) {
 		return  "#eeeeee";
 	} else {
-		return "#CBE9F2";
+		return "#D3EBF2";
 	}
 }
 

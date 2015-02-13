@@ -4,7 +4,7 @@ function SetInitialState() {
 	curGeneration = [];
 	for(var i = 0; i < rows; ++i){
 		for(var j = 0; j < columns; ++j){
-			curGeneration.push(false);
+			curGeneration.push(0);
 		}
 	}
 }
@@ -24,23 +24,23 @@ function SetRandomState() {
 
 function simItem(row, column, value) {
 	var liveCount = countAdjacent(1, row, column);
-	if(!value) {
+	if(value == 0 || value == 2) {
 		//We become live iff have 3 alive neighbors
 		if(liveCount == 3) {
 			changes++;
 			population++;
-			return true;
+			return 1;
 		} else {
-			return false;
+			return value;
 		}
 	} else {
 		//We die if we have more than 2 or less than 3 alive neighbors
 		if(liveCount == 2 || liveCount == 3) {
-			return true;
+			return 1;
 		} else {
 			changes++;
 			population--;
-			return false;
+			return 2;
 		}
 	}
 }
@@ -55,11 +55,13 @@ function clickItem(value) {
 	}
 }
 
-function getColor(value) {
-	if(value == 0) {
+function getColor(value, trails) {
+	if(value == 1) {
+		return "lightblue";
+	} else if(value == 0 || !trails) {
 		return  "#eeeeee";
 	} else {
-		return "lightblue";
+		return "#CBE9F2";
 	}
 }
 

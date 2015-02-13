@@ -43,8 +43,8 @@
 		</style>
 		<title>Game of Life</title>
 		<script src="./d3min.js" charset="utf-8"></script>
-		<script src="./ClassicConfig.js"></script>
 		<script src="./BaseGame.js"></script>
+		<script src="./ClassicConfig.js"></script>
 	</head>
 	<body bgcolor="#fdfcf9">
 		<div style="width:830px;margin:auto;padding:none;">
@@ -55,6 +55,7 @@
 			<br/>
 			<button onclick="reset()" id="resetButton">Reset</button>
 			<button onclick="randomize()" id='randomizeButton'>Randomize</button>
+			<input type="checkbox" id="useTrails" onChange="updateTrails()">Use Trails<br/><br/>
 			Generation: <label id="Generation">0</label>
 			Population: <label id="Population">0</label>
 		</div>

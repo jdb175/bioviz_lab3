@@ -1,40 +1,27 @@
-# bioviz-life
-Game of Life assignment for Bioviz
+# bioviz-lab2
+Interaction assessment of game of Life assignment for Bioviz
 
-## Description
+Supported Interactions:
 
-This is an original implementation of Conway's game of life, which is governed by four rules:
+Set random state
+	-If the user does not know what state thay are interested in, the random state allows them to view how an arbitrary one behaves (multiple times, if they use the button more than once).
+Painting cells
+	-If the user wants to investigate the behavior of a specific board state, or modify some part of one, this gives them the flexibility to do so. This is especially useful for investigating a pattern that they may have noticed.
+Reset to empty state
+	-This is really just a convenience measure to make it easier to set up the desired state.
+Start/stop simulation
+	-The user can stop to inspect or modify the current state - this is needed because the simulation moves too quickly for the user to process the specific configurations as they pass.
+Move forward or back one generation
+	-This is useful to see in detail how the simulation progesses; either the
+Click on history graph to jump to a generation
+	-This allows a user to see what led to a particular state, and even go back to modify and see how things will be changed. Jumping into the future is a convenience measure.
 
-* Any live cell with fewer than two live neighbours dies, as if caused by under-population.
-* Any live cell with two or three live neighbours lives on to the next generation.
-* Any live cell with more than three live neighbours dies, as if by overcrowding.
-* Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-
-The initial state is empty, and the user can set their own starting state by hitting the randomize
-button or painting live cells onto the grid. It is also possible to modify the state after the 
-simulation has started.
-
-The population over time can be seen in the chart at the bottom of the page, for up to 400 past 
-generations. It is possible to ump to a previous or future generation by clicking on the chart.
-This is the primary technical achievement of this implementation, along with the interactive
-cell painting. It allows the user to review what has happened, and also to experiment with how
-changes affect the outcome of the simulation. This is not directly a bio-related addition, but
-it connects with the way that biologists interact with simulations.
-
-The code is my own.
-
-## Viz
-
-I used color to differentiate between alive and dead cells, because I thought that it would
-disrupt interpretation of the natural shapes formed by multiple cells if I used shapes instead.
-I chose gray and blue because the saturation difference would make it easier to distinguish. I
-had seen some examples with two colors for alive and dead cells (e.g. red and blue) and it was
-hard to look at.
-
-Shape and motion are also significant to this visualization, because of the motion of the shapes
-made up of adjacent live cells. There are a number of shapes that all have unique behavior and
-appearance, from oscillators to spaceships.
-
-## Running 
-
-This program can be run by opening Assignment1.hmtl in a modern browser.
+more graphs
+	-the user wants to be able to see trends in population as well as just the population, but needs the ability to control which they see to avoid making it too busy.
+	- Discussion with Liz and classmates brought the idea of having multiple selectable options for the bottom graph
+filtering for graphs
+	-The use might want to focus on a specific part of the simulation, because they are interested in the structures or behavior there.
+	-The idea was to allow the user to highlight a rectangular section to focus on, and only display that section and only graph info for that section
+color change option  (trails)
+	-The user wants to see information about the history of the state without having to traverse the graph.
+	-The idea was to show cells that had been alive at one point with a separate color, possibly fading it as it remains dead.

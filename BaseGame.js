@@ -6,6 +6,7 @@ var height = 700;
 var sideMargin = 38;
 var betweenMargin = 10;
 var canvas;
+var trails = false;
 
 //State info
 var changes = 0;
@@ -223,7 +224,7 @@ function randomize() {
 function showGrid(){
 	//Show the grid
 	var data = canvas.selectAll("circle")
-		.data(curGeneration);
+		.data(curGeneration, function(d,i) {return i;});
 
 	data.enter()
 		.append("circle")
@@ -238,9 +239,9 @@ function showGrid(){
 			var column = i - row*rows;
 	        return sideMargin +row*width/rows+width/rows/2;
 		})
-		.attr("fill", function(d) { return getColor(d); } );
+		.attr("fill", function(d) { return getColor(d, trails); } );
 
-	data.attr("fill", function(d) { return getColor(d); } )
+	data.attr("fill", function(d) { return getColor(d, trails); } )
 }
 
 /*
@@ -424,4 +425,10 @@ function handleKeyPress(evt) {
     	}
     	applySavedState(selectedGen);
     }
+}
+
+/* Updates whether we use trails and reshows grid */
+function updateTrails() {
+	trails = document.getElementById("useTrails").checked;
+	showGrid();
 }
